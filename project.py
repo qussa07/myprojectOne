@@ -114,16 +114,24 @@ class Redactor(QMainWindow):
         uic.loadUi(f, self)
         self.db_button.clicked.connect(self.open)
         self.file_button.clicked.connect(self.open)
+        self.save_button.clicked.connect(self.save)
 
     def open(self):
-        if self.sender().text() == 'Открыть путь к изменяемому файлу':
-            self.name = QFileDialog.getOpenFileName(self, 'Открыть путь к файлу', '', filter='Лист Excel (*.xlsx)')[0]
-            self.setGeometry(400, 400, *SCREEN_SIZE)
-            # ТРЕБУЕТСЯ ДОПИСАТЬ ИБО НИЧЕ НЕ РАБОТАЕТ
-        else:
-            self.name = QFileDialog.getOpenFileName(self, 'Открыть путь к файлу', '', filter='Лист Excel (*.xlsx)')[0]
-            self.setGeometry(400, 400, *SCREEN_SIZE)
-            # ТРЕБУЕТСЯ ДОПИСАТЬ ИБО НИЧЕ НЕ РАБОТАЕТ
+        self.dialog = QFileDialog.getOpenFileName(self, 'Открыть путь к файлу', '', filter='Лист Excel (*.xlsx)')[0]
+        self.setGeometry(400, 400, *SCREEN_SIZE)
+        data = 0
+        # ДОЛЖНА БЫТЬ ДАТА КОТОРАЯ ПЕРЕНОСИТСЯ В unzip
+        self.unzip(data)
+        # ТРЕБУЕТСЯ ДОПИСАТЬ ИБО НИЧЕ НЕ РАБОТАЕТ
+
+    def unzip(self):
+        pass
+
+    def text_to_PlainText(self):
+        pass
+
+    def save(self):
+        pass
 
 
 if __name__ == '__main__':
