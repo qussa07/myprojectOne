@@ -12,84 +12,64 @@ template = '''<?xml version="1.0" encoding="UTF-8"?>
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1114</width>
-    <height>523</height>
+    <width>735</width>
+    <height>231</height>
    </rect>
   </property>
   <property name="minimumSize">
    <size>
-    <width>1114</width>
-    <height>523</height>
+    <width>735</width>
+    <height>231</height>
    </size>
   </property>
   <property name="maximumSize">
    <size>
-    <width>1114</width>
-    <height>523</height>
+    <width>735</width>
+    <height>231</height>
    </size>
   </property>
   <property name="windowTitle">
    <string>MainWindow</string>
   </property>
   <widget class="QWidget" name="centralwidget">
-   <widget class="QLineEdit" name="line_box">
-    <property name="geometry">
-     <rect>
-      <x>970</x>
-      <y>40</y>
-      <width>113</width>
-      <height>20</height>
-     </rect>
-    </property>
-   </widget>
-   <widget class="QPushButton" name="file_button">
-    <property name="geometry">
-     <rect>
-      <x>640</x>
-      <y>460</y>
-      <width>231</width>
-      <height>21</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>Открыть путь к изменяемому файлу</string>
-    </property>
-   </widget>
-   <widget class="QPushButton" name="db_button">
-    <property name="geometry">
-     <rect>
-      <x>900</x>
-      <y>460</y>
-      <width>191</width>
-      <height>21</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>Открыть путь к базе данных</string>
-    </property>
-   </widget>
    <widget class="QPushButton" name="save_button">
     <property name="geometry">
      <rect>
-      <x>960</x>
-      <y>80</y>
-      <width>141</width>
-      <height>21</height>
+      <x>230</x>
+      <y>30</y>
+      <width>281</width>
+      <height>31</height>
      </rect>
     </property>
     <property name="text">
      <string>Сохранить изменения</string>
     </property>
    </widget>
-   <widget class="QTableWidget" name="tableWidget">
+   <widget class="QWidget" name="horizontalLayoutWidget">
     <property name="geometry">
      <rect>
-      <x>20</x>
-      <y>10</y>
-      <width>891</width>
-      <height>241</height>
+      <x>50</x>
+      <y>70</y>
+      <width>659</width>
+      <height>78</height>
      </rect>
     </property>
+    <layout class="QHBoxLayout" name="horizontalLayout">
+     <item>
+      <widget class="QPushButton" name="file_button">
+       <property name="text">
+        <string>Открыть путь к изменяемому файлу</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="db_button">
+       <property name="text">
+        <string>Открыть путь к базе данных</string>
+       </property>
+      </widget>
+     </item>
+    </layout>
    </widget>
   </widget>
   <widget class="QMenuBar" name="menubar">
@@ -97,7 +77,7 @@ template = '''<?xml version="1.0" encoding="UTF-8"?>
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>1114</width>
+     <width>735</width>
      <height>21</height>
     </rect>
    </property>
@@ -130,37 +110,29 @@ class Redactor(QMainWindow):
             self.statusBar().showMessage('Не указан файл')
             return
 
-    def text_to_PlainText(self, data):
-        for index, elem in enumerate(data):
-            data[index] = f'A{index + 1}: '+ elem
-        self.text_db.setPlainText(''.join(data))
+    def save(self, i):
 
-    def save(self):
-        self.data.save(self.dialog)
+        self.data.save(('/'.join(self.dialog.split('/')[0:-1]) + '/' + i + '.xlsx'))
+        print(('/'.join(self.dialog.split('/')[0:-1]) + '/' + i))
+
 
     def open_db(self):
         self.dialog_db = QFileDialog.getOpenFileName(self, 'Открыть путь', '', filter='Блокнот (*.txt)')[0]
         self.setGeometry(400, 400, *SCREEN_SIZE)
         try:
             with open(self.dialog_db, 'r', encoding='utf-8') as file:
-                data = file.readlines()
+                self.db_data = file.read().split(';')
+                print(self.db_data)
         except Exception:
             self.statusBar().showMessage('Не указан файл')
             return
-        print(1)
-        self.text_to_PlainText(data)
 
     def redactor(self):
-        item = self.line_box.text()
-        if not (item):
-            self.statusBar().showMessage('Отсутсвуют клетки')
-            return
-        item = item.split()
         try:
-            for box in item:
-                print(box)
-                self.active_data[box] = 3
-            self.save()
+            for i in self.db_data:
+                self.active_data['B1'] = i
+                print(i)
+                self.save(i)
         except Exception:
             self.statusBar().showMessage('Не указан файл')
             return
