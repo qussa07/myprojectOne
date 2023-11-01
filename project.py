@@ -111,10 +111,7 @@ class Redactor(QMainWindow):
             return
 
     def save(self, i):
-
         self.data.save(('/'.join(self.dialog.split('/')[0:-1]) + '/' + i + '.xlsx'))
-        print(('/'.join(self.dialog.split('/')[0:-1]) + '/' + i))
-
 
     def open_db(self):
         self.dialog_db = QFileDialog.getOpenFileName(self, 'Открыть путь', '', filter='Блокнот (*.txt)')[0]
@@ -122,17 +119,20 @@ class Redactor(QMainWindow):
         try:
             with open(self.dialog_db, 'r', encoding='utf-8') as file:
                 self.db_data = file.read().split(';')
-                print(self.db_data)
         except Exception:
             self.statusBar().showMessage('Не указан файл')
             return
 
     def redactor(self):
         try:
+            if not (self.db_data[0]):
+                self.statusBar().showMessage('База данных пуста')
+                return
             for i in self.db_data:
+                print(self.db_data)
                 self.active_data['B1'] = i
-                print(i)
                 self.save(i)
+
         except Exception:
             self.statusBar().showMessage('Не указан файл')
             return
