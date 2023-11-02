@@ -1,5 +1,6 @@
 import io
 import sys
+import datetime
 import openpyxl
 from PyQt5.QtWidgets import QApplication, QMainWindow, QFileDialog
 from PyQt5 import uic
@@ -129,11 +130,13 @@ class Redactor(QMainWindow):
                 self.statusBar().showMessage('База данных пуста')
                 return
             for i in self.db_data:
-                print(self.db_data)
                 self.active_data['B1'] = i
+                self.active_data['J1'] = datetime.date.today()
                 self.save(i)
 
-        except Exception:
+
+        except Exception as file:
+            print(file)
             self.statusBar().showMessage('Не указан файл')
             return
 
