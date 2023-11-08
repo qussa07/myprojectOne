@@ -1,7 +1,7 @@
 import io
 import sys
 import os
-from datetime import date
+from datetime import date, datetime, timedelta
 import openpyxl
 from PyQt5.QtWidgets import QApplication, QMainWindow, QFileDialog, QMessageBox
 from PyQt5 import uic, QtCore
@@ -10,6 +10,9 @@ template = '''<?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
  <class>MainWindow</class>
  <widget class="QMainWindow" name="MainWindow">
+  <property name="enabled">
+   <bool>true</bool>
+  </property>
   <property name="geometry">
    <rect>
     <x>0</x>
@@ -33,66 +36,116 @@ template = '''<?xml version="1.0" encoding="UTF-8"?>
   <property name="windowTitle">
    <string>MainWindow</string>
   </property>
+  <property name="dockOptions">
+   <set>QMainWindow::AllowTabbedDocks|QMainWindow::AnimatedDocks</set>
+  </property>
+  <property name="unifiedTitleAndToolBarOnMac">
+   <bool>false</bool>
+  </property>
   <widget class="QWidget" name="centralwidget">
-   <widget class="QPushButton" name="save_button">
+   <widget class="QTabWidget" name="tabWidget">
     <property name="geometry">
      <rect>
-      <x>140</x>
-      <y>30</y>
-      <width>281</width>
-      <height>31</height>
+      <x>0</x>
+      <y>0</y>
+      <width>731</width>
+      <height>211</height>
      </rect>
     </property>
-    <property name="text">
-     <string>Сохранить изменения</string>
+    <property name="whatsThis">
+     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;dfsdafasdf&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
     </property>
-   </widget>
-   <widget class="QWidget" name="horizontalLayoutWidget">
-    <property name="geometry">
-     <rect>
-      <x>50</x>
-      <y>100</y>
-      <width>659</width>
-      <height>78</height>
-     </rect>
+    <property name="currentIndex">
+     <number>0</number>
     </property>
-    <layout class="QHBoxLayout" name="horizontalLayout">
-     <item>
-      <widget class="QPushButton" name="file_button">
-       <property name="text">
-        <string>Открыть путь к изменяемому файлу</string>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QPushButton" name="db_button">
-       <property name="text">
-        <string>Открыть путь к базе данных</string>
-       </property>
-      </widget>
-     </item>
-    </layout>
+    <widget class="QWidget" name="tab">
+     <attribute name="title">
+      <string>Меню программы</string>
+     </attribute>
+     <widget class="QWidget" name="horizontalLayoutWidget">
+      <property name="geometry">
+       <rect>
+        <x>20</x>
+        <y>100</y>
+        <width>659</width>
+        <height>78</height>
+       </rect>
+      </property>
+      <layout class="QHBoxLayout" name="horizontalLayout">
+       <item>
+        <widget class="QPushButton" name="file_button">
+         <property name="text">
+          <string>Открыть путь к изменяемому файлу</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="db_button">
+         <property name="text">
+          <string>Открыть путь к базе данных</string>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+     <widget class="QPushButton" name="save_button">
+      <property name="geometry">
+       <rect>
+        <x>40</x>
+        <y>40</y>
+        <width>281</width>
+        <height>31</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Сохранить изменения</string>
+      </property>
+     </widget>
+     <widget class="QDateEdit" name="select_date">
+      <property name="geometry">
+       <rect>
+        <x>350</x>
+        <y>50</y>
+        <width>110</width>
+        <height>22</height>
+       </rect>
+      </property>
+     </widget>
+     <widget class="QSpinBox" name="days">
+      <property name="geometry">
+       <rect>
+        <x>530</x>
+        <y>50</y>
+        <width>42</width>
+        <height>22</height>
+       </rect>
+      </property>
+     </widget>
+     <widget class="QLabel" name="label">
+      <property name="geometry">
+       <rect>
+        <x>500</x>
+        <y>10</y>
+        <width>131</width>
+        <height>16</height>
+       </rect>
+      </property>
+      <property name="font">
+       <font>
+        <pointsize>10</pointsize>
+       </font>
+      </property>
+      <property name="text">
+       <string>Количество дней:</string>
+      </property>
+     </widget>
+    </widget>
+    <widget class="QWidget" name="tab_2">
+     <attribute name="title">
+      <string>О создателе</string>
+     </attribute>
+    </widget>
    </widget>
-   <widget class="QDateEdit" name="select_date">
-    <property name="geometry">
-     <rect>
-      <x>500</x>
-      <y>40</y>
-      <width>110</width>
-      <height>22</height>
-     </rect>
-    </property>
-   </widget>
-  </widget>
-  <widget class="QMenuBar" name="menubar">
-   <property name="geometry">
-    <rect>
-     <x>0</x>
-     <y>0</y>
-     <width>735</width>
-     <height>21</height>
-    </rect>
-   </property>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
  </widget>
@@ -108,6 +161,7 @@ class Redactor(QMainWindow):
         super().__init__()
         f = io.StringIO(template)
         uic.loadUi(f, self)
+        self.count = 0
         self.setWindowTitle('Массовое изменение xlsx файлов')
         self.db_data = None
         self.return_real_date()
@@ -116,6 +170,15 @@ class Redactor(QMainWindow):
         self.file_button.clicked.connect(self.open_file)
         self.save_button.clicked.connect(self.redactor)
         self.save_button.setEnabled(False)
+
+        self.file_button.setStyleSheet('QPushButton {'
+                                       'border: 2px solid rgba(255, 0, 17, 239)'
+                                       '}'
+                                       'QPushButton:hover {'
+                                       'background-color: rgba(199, 250, 90, 100);'
+                                       'border-image: url(Без имени.png);'
+                                       '}')
+        # self.setStyleSheet('border-image: url(shutterstock_478784707.jpg)')
 
     def open_file(self):
         self.dialog = QFileDialog.getOpenFileName(self, 'Открыть путь к файлу', '', filter='Лист Excel (*.xlsx)')[0]
@@ -129,14 +192,15 @@ class Redactor(QMainWindow):
             return
         self.check()
 
-    def save(self, i):
-        directory = os.path.abspath(i)
-        if not(directory):
+    def save(self, name, date):
+        directory = os.path.abspath(name)
+        if not (os.path.exists(directory)):
             os.mkdir(directory)
-        date = self.select_date.dateTime().toString('dd-MM-yyyy')
         self.data.save(directory + '/' + f'{date}-sm.xlsx')
-        self.statusBar().showMessage('Успешно!')
-        self.information_message('Успешно!', 'Создание и изменение файлов прошло успешно.')
+        self.count += 1
+        if self.count == len(self.db_data):
+            self.сongratulations()
+            self.count = 0
 
     def open_db(self):
         self.dialog_db = QFileDialog.getOpenFileName(self, 'Открыть путь', '', filter='Блокнот (*.txt)')[0]
@@ -144,6 +208,7 @@ class Redactor(QMainWindow):
         try:
             with open(self.dialog_db, 'r', encoding='utf-8') as file:
                 self.db_data = file.read().split(';')
+                print(self.db_data)
         except Exception:
             self.statusBar().showMessage('Не указан файл')
             self.error_message('Ошибка!', 'Не указан нужный файл')
@@ -151,18 +216,23 @@ class Redactor(QMainWindow):
         self.check()
 
     def redactor(self):
+        if not (self.days.value()):
+            self.error_message('Ошибка!', 'Не указано количество дней')
+            self.statusBar().showMessage('Не указан файл')
+            return
         try:
             if not (self.db_data[0]):
                 self.statusBar().showMessage('База данных пуста')
                 return
-            for i in self.db_data:
-                self.active_data['B1'] = i
-                date_from_QDateEdit = self.select_date.dateTime().toString('dd.MM.yyyy')
-                self.active_data['J1'] = date_from_QDateEdit
-                self.save(i)
-
-
-        except Exception as file:
+            for name in self.db_data:
+                date = self.select_date.dateTime().toString('dd.MM.yyyy')
+                date_from_QDateEdit = datetime.strptime(date, '%d.%m.%Y').date()
+                for i in range(self.days.value()):
+                    self.active_data['B1'] = name
+                    self.active_data['J1'] = date_from_QDateEdit.strftime('%d.%m.%Y')
+                    self.save(name, date_from_QDateEdit.strftime('%d-%m-%Y'))
+                    date_from_QDateEdit = date_from_QDateEdit + timedelta(days=1)
+        except Exception:
             self.error_message('Ошибка!', 'Не указан файл')
             self.statusBar().showMessage('Не указан файл')
             return
@@ -175,11 +245,37 @@ class Redactor(QMainWindow):
         self.select_date.setDisplayFormat("dd.MM.yyyy")
 
     def check(self):
-        print(1)
         if self.data:
             self.db_button.setEnabled(True)
+            self.db_button.setStyleSheet('QPushButton {'
+                                         'border: 2px solid rgba(255, 0, 17, 239)'
+                                         '}'
+                                         'QPushButton:hover {'
+                                         'background-color: rgba(199, 250, 90, 100);'
+                                         'border-image: url(Без имени.png);'
+                                         '}')
+            self.file_button.setStyleSheet('QPushButton {'
+                                           'border: 2px solid rgba(0, 255, 9, 239)'
+                                           '}'
+                                           'QPushButton:hover {'
+                                           'background-color: rgba(199, 250, 90, 100);'
+                                           'border-image: url(263a-fe0f.png);'
+                                           '}')
             if self.db_data:
+                self.db_button.setStyleSheet('QPushButton {'
+                                             'border: 2px solid rgba(0, 255, 9, 239)'
+                                             '}'
+                                             'QPushButton:hover {'
+                                             'background-color: rgba(199, 250, 90, 100);'
+                                             'border-image: url(shutterstock_478784707.jpg);'
+                                             '}')
                 self.save_button.setEnabled(True)
+                self.save_button.setStyleSheet('QPushButton {'
+                                               'border: 2px solid rgba(255, 0, 17, 239)'
+                                               '}'
+                                               'QPushButton:hover {'
+                                               'background-color: rgba(199, 250, 90, 100)'
+                                               '}')
 
     def error_message(self, title, message):
         error_dialog = QMessageBox(self)
@@ -195,6 +291,9 @@ class Redactor(QMainWindow):
         error_dialog.setText(message)
         error_dialog.exec_()
 
+    def сongratulations(self):
+        self.statusBar().showMessage('Успешно!')
+        self.information_message('Успешно!', 'Создание и изменение файлов прошло успешно.')
 
 
 if __name__ == '__main__':
